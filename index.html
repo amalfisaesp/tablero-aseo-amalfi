@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tablero de aseo — Amalfi S.A. E.S.P.</title>
+  <link rel="icon" href="assets/logo.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="lx" id="lx-dash">
+  <header class="lx-hd">
+    <img class="lx-logo" src="assets/logo.png" alt="Amalfi SA ESP, por su bienestar">
+    <div>
+      <h1 id="lx-title">Tablero de aseo</h1>
+      <p class="lx-take" id="lx-take" data-source="barrido lavado poda cestas fotos">Cargando datos…</p>
+    </div>
+  </header>
+  <div class="lx-swoosh" aria-hidden="true"></div>
+  <div class="lx-tabs" role="tablist" id="lx-tabs"></div>
+  <div class="lx-bar lx-gbar">
+    <label>Desde<select id="f-d0" aria-label="Fecha inicial"></select></label>
+    <label>Hasta<select id="f-d1" aria-label="Fecha final"></select></label>
+    <button class="lx-btn" id="lx-reset" type="button">Quitar filtros</button>
+    <span class="lx-fnote" id="f-note"></span>
+  </div>
+
+  <section class="lx-page" id="pg-resumen" data-page="resumen">
+    <div class="lx-bar" style="margin-top:16px;">
+      <label>Informe mensual<select id="f-informe-mes" style="min-width:9rem"></select></label>
+      <button class="btn btn-ghost" id="btn-descargar-informe">Informe de avance (.docx)</button>
+      <button class="btn btn-ghost" id="btn-descargar-control">Control Microrutas (.xlsx)</button>
+      <button class="btn btn-ghost" id="btn-descargar-residuos">Residuos (.xlsx)</button>
+    </div>
+    <div class="lx-kpis" id="rs-kpis" data-source="barrido lavado poda cestas fotos"></div>
+    <div class="lx-grid">
+      <section class="lx-card" id="sec-dia" data-source="barrido lavado poda cestas">
+        <h2>Registros por día</h2>
+        <p class="lx-note">Cuántos registros hizo el equipo cada día, por servicio.</p>
+        <div class="lx-legend" id="lg-rs"></div>
+        <div class="lx-chart" id="ch-rs"></div>
+      </section>
+      <section class="lx-card" id="sec-fsvc" data-source="barrido lavado poda cestas fotos">
+        <h2>Fotos por servicio</h2>
+        <p class="lx-note">Fotos de evidencia cargadas desde la aplicación.</p>
+        <div class="lx-chart" id="ch-fs"></div>
+      </section>
+    </div>
+    <h2 style="margin:0 0 .5rem">Servicios de la aplicación</h2>
+    <div class="lx-svc" id="rs-svc" data-source="barrido lavado poda cestas"></div>
+    <section class="lx-card" id="sec-last" data-source="barrido lavado poda cestas fotos" style="margin-bottom: 16px">
+      <h2>Últimas fotos</h2>
+      <p class="lx-note">Las más recientes de cualquier servicio. Pulsa para ampliar.</p>
+      <div class="lx-gal" id="rs-gal"></div>
+    </section>
+  </section>
+
+  <section class="lx-page" id="pg-barrido" data-page="barrido" hidden>
+    <div class="lx-bar">
+      <label>Microruta<select id="lx-ruta" aria-label="Filtrar por microruta"></select></label>
+      <label>Registros<select id="lx-fot" aria-label="Filtrar por fotos u observaciones"><option value="">Todos</option><option value="foto">Solo con fotos</option><option value="obs">Solo con observaciones</option></select></label>
+      <button class="btn btn-ghost" id="btn-exportar">Descargar CSV</button>
+      <button class="btn btn-ghost" id="btn-descargar-fotos">Descargar fotos (ZIP)</button>
+    </div>
+    <div class="lx-kpis" data-source="barrido">
+      <div class="lx-card lx-kpi"><small>Registros de barrido</small><strong id="k-reg">—</strong><span id="k-reg-n"></span></div>
+      <div class="lx-card lx-kpi"><small>Vías barridas</small><strong id="k-vb">—</strong><span>suma de los registros</span></div>
+      <div class="lx-card lx-kpi"><small>Vías limpiadas</small><strong id="k-vl">—</strong><span>suma de los registros</span></div>
+      <div class="lx-card lx-kpi"><small>Residuos recogidos</small><strong id="k-kg">—</strong><span>kilogramos</span></div>
+      <div class="lx-card lx-kpi"><small>Promedio por registro</small><strong id="k-avg">—</strong><span>kg por microruta y día</span></div>
+    </div>
+    <div class="lx-kpis" id="bk-stats" data-source="barrido microrutas"></div>
+    <div class="lx-grid">
+      <section class="lx-card" id="sec-peso" data-source="barrido">
+        <h2>Residuos recogidos por microruta</h2>
+        <p class="lx-note">Kilogramos en el periodo elegido. Pulsa una barra para filtrar.</p>
+        <div class="lx-chart" id="ch-peso"></div>
+      </section>
+      <section class="lx-card" id="sec-vias" data-source="barrido">
+        <h2>Vías barridas y limpiadas por microruta</h2>
+        <p class="lx-note">Suma de vías en el periodo elegido.</p>
+        <div class="lx-legend"><span><i style="background:var(--vg)"></i>Barridas</span><span><i style="background:var(--am)"></i>Limpiadas</span></div>
+        <div class="lx-chart" id="ch-vias"></div>
+      </section>
+    </div>
+    <div class="lx-grid">
+      <section class="lx-card" id="sec-evo" data-source="barrido">
+        <h2>Evolución diaria y variabilidad</h2>
+        <p class="lx-note" id="evo-note">Kilogramos por día con la media (línea punteada), la banda de ±1 desviación estándar y la tendencia.</p>
+        <div class="lx-chart" id="ch-evo"></div>
+      </section>
+      <section class="lx-card" id="sec-area" data-source="microrutas">
+        <h2>Área asignada a cada microruta</h2>
+        <p class="lx-note">Metros cuadrados según el catálogo de microrutas.</p>
+        <div class="lx-chart" id="ch-area"></div>
+      </section>
+    </div>
+    <div class="lx-grid">
+      <section class="lx-card" id="sec-box" data-source="barrido">
+        <h2>Distribución por microruta</h2>
+        <p class="lx-note">Diagrama de caja de los kg por registro: la caja va del cuartil 1 al 3, la raya es la mediana y los extremos son mínimo y máximo.</p>
+        <div class="lx-chart" id="ch-box"></div>
+      </section>
+      <section class="lx-card" id="sec-heat" data-source="barrido">
+        <h2>Mapa de calor: kg por microruta y día</h2>
+        <p class="lx-note">Cuanto más oscuro, más residuos. Un hueco indica que no hubo registro ese día.</p>
+        <div class="lx-chart" id="ch-heat"></div>
+      </section>
+    </div>
+    <section class="lx-card" id="sec-tabla" data-source="barrido microrutas" style="margin-bottom: 16px">
+      <h2>Detalle por microruta</h2>
+      <p class="lx-note">Ordena con los encabezados. El filtro de día se aplica a las cifras de vías y residuos.</p>
+      <div class="lx-tablebox"><table id="tb"><thead></thead><tbody></tbody></table></div>
+    </section>
+    <section class="lx-card" id="sec-atip" data-source="barrido" style="margin-bottom: 16px">
+      <h2>Registros atípicos</h2>
+      <p class="lx-note">Pesos que se alejan 2 o más desviaciones estándar de la media de su propia microruta (se evalúan las que tienen 4 o más registros).</p>
+      <ul class="lx-obs" id="atip"></ul>
+    </section>
+    <section class="lx-card" id="sec-obs" data-source="barrido" style="margin-bottom: 16px">
+      <h2>Observaciones del personal</h2>
+      <p class="lx-note">Novedades escritas en los registros del periodo.</p>
+      <ul class="lx-obs" id="obs"></ul>
+    </section>
+    <section class="lx-card" id="sec-gal-b" data-source="barrido fotos" style="margin-bottom: 16px">
+      <h2>Fotos de barrido</h2>
+      <p class="lx-note" id="gal-b-n">Respeta los filtros de día y microruta.</p>
+      <div class="lx-gal" id="gal-b"></div>
+    </section>
+  </section>
+
+  <section class="lx-page" id="pg-lavado" data-page="lavado" hidden>
+    <div class="lx-bar"><label>Área<select id="lv-area" aria-label="Filtrar por área"></select></label></div>
+    <div class="lx-kpis" id="lv-kpis" data-source="lavado"></div>
+    <div class="lx-grid">
+      <section class="lx-card" id="sec-lv-area" data-source="lavado areas">
+        <h2>Metros cuadrados lavados por área</h2>
+        <p class="lx-note">Suma de las jornadas registradas.</p>
+        <div class="lx-chart" id="ch-lv"></div>
+      </section>
+      <section class="lx-card" id="sec-lv-tb" data-source="lavado areas">
+        <h2>Jornadas de lavado</h2>
+        <div class="lx-tablebox"><table class="lx-t" id="tb-lv"></table></div>
+      </section>
+    </div>
+    <section class="lx-card" id="sec-gal-l" data-source="lavado fotos" style="margin-bottom: 16px">
+      <h2>Fotos de lavado de áreas</h2>
+      <div class="lx-gal" id="gal-l"></div>
+    </section>
+  </section>
+
+  <section class="lx-page" id="pg-poda" data-page="poda" hidden>
+    <div class="lx-bar"><label>Área<select id="pd-area" aria-label="Filtrar por área"></select></label><label>Tipo de poda<select id="pd-tipo" aria-label="Filtrar por tipo de poda"></select></label></div>
+    <div class="lx-kpis" id="pd-kpis" data-source="poda"></div>
+    <section class="lx-card" id="sec-pd-tb" data-source="poda areas" style="margin-bottom: 16px">
+      <h2>Jornadas de poda</h2>
+      <div class="lx-tablebox"><table class="lx-t" id="tb-pd"></table></div>
+    </section>
+    <section class="lx-card" id="sec-gal-p" data-source="poda fotos" style="margin-bottom: 16px">
+      <h2>Fotos de poda de árboles</h2>
+      <div class="lx-gal" id="gal-p"></div>
+    </section>
+  </section>
+
+  <section class="lx-page" id="pg-cestas" data-page="cestas" hidden>
+    <div class="lx-kpis" id="ce-kpis" data-source="cestas"></div>
+    <div class="lx-grid">
+      <section class="lx-card" id="sec-ce-dia" data-source="cestas">
+        <h2>Cestas limpiadas por jornada</h2>
+        <p class="lx-note">Cantidad de cestas limpiadas en cada jornada.</p>
+        <div class="lx-chart" id="ch-ce"></div>
+      </section>
+      <section class="lx-card" id="sec-ce-tb" data-source="cestas">
+        <h2>Jornadas de limpieza</h2>
+        <div class="lx-tablebox"><table class="lx-t" id="tb-ce"></table></div>
+      </section>
+    </div>
+    <section class="lx-card" id="sec-gal-c" data-source="cestas fotos" style="margin-bottom: 16px">
+      <h2>Fotos de limpieza de cestas</h2>
+      <div class="lx-gal" id="gal-c"></div>
+    </section>
+  </section>
+
+  <p class="lx-foot">Fuente: hoja Aseo__Operativo de Amalfi SA ESP (REG_BARRIDO, REG_LAVADO_AREAS, REG_PODA_ARBOLES, REG_LIMPIEZA_CESTAS y catálogos). No incluye nombres de operarios ni coordinadores en esta vista.</p>
+  <div class="lx-tip" id="lx-tip" hidden></div>
+  <div class="lx-lb" id="lx-lb" hidden role="dialog" aria-label="Foto ampliada"><img id="lb-img" alt=""><div class="cap" id="lb-cap"></div><div class="nav"><button type="button" id="lb-prev">‹ Anterior</button><button type="button" id="lb-next">Siguiente ›</button><button type="button" id="lb-x">Cerrar</button></div></div>
+</div>
+
+<script src="config.js"></script>
+<script src="gas-shim.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
