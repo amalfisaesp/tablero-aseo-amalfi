@@ -494,32 +494,78 @@
   // ---------------------------------------------------------------------
   // Carga de datos y filtros globales
   // ---------------------------------------------------------------------
+  // Las listas de filtros se vuelven a llenar en cada actualizacion (pueden aparecer dias,
+  // microrutas o areas nuevas) conservando lo que la persona ya tenia elegido.
+  function fillFilters() {
+    const dias = [...new Set([...X.barrido, ...X.lavado, ...X.poda, ...X.cestas].map((r) => r.f))].sort();
+    const usadas = (rows) => [...new Set(rows.map((r) => r.area))].map((id) => [id, (X.areas.find((a) => a.id === id) || { nombre: id }).nombre]);
+    const fill = (id, key, arr, allLabel) => {
+      const sel = $(id);
+      sel.replaceChildren(new Option(allLabel, ''), ...arr.map(([v, n]) => new Option(n, v)));
+      if (st[key] && !arr.some(([v]) => v === st[key])) st[key] = '';
+      sel.value = st[key] || '';
+    };
+    fill('#f-d0', 'd0', dias.map((d) => [d, dlab(d)]), 'Primer día');
+    fill('#f-d1', 'd1', dias.map((d) => [d, dlab(d)]), 'Último día');
+    fill('#lx-ruta', 'ruta', X.cat.map((c) => [c.id, c.id]), 'Todas');
+    fill('#lv-area', 'larea', usadas(X.lavado), 'Todas las áreas');
+    fill('#pd-area', 'parea', usadas(X.poda), 'Todas las áreas');
+    fill('#pd-tipo', 'ptipo', [...new Set(X.poda.map((r) => r.tipo))].filter(Boolean).map((t) => [t, t]), 'Todos');
+  }
+
+  function wireFilters() {
+    const on = (id, k) => $(id).addEventListener('change', (e) => { st[k] = e.target.value; if (st.d0 && st.d1 && st.d0 > st.d1) { if (k === 'd0') st.d1 = st.d0; else st.d0 = st.d1; } draw(); });
+    on('#f-d0', 'd0'); on('#f-d1', 'd1'); on('#lx-ruta', 'ruta'); on('#lx-fot', 'fot'); on('#lv-area', 'larea'); on('#pd-area', 'parea'); on('#pd-tipo', 'ptipo');
+    $('#lx-reset').addEventListener('click', () => { Object.assign(st, { d0: '', d1: '', ruta: '', fot: '', larea: '', parea: '', ptipo: '' }); fillFilters(); draw(); });
+  }
+
+  // ---------------------------------------------------------------------
+  // Carga y actualizacion automatica cada 5 minutos
+  // ---------------------------------------------------------------------
+  // 5 minutos; con ?refresh=<milisegundos> en la direccion se puede acortar (minimo 10 s) para probar.
+  const REFRESH_MS = Math.max(10000, Number(new URLSearchParams(location.search).get('refresh')) || 5 * 60 * 1000);
+  let lastSig = null, lastLoad = 0, loading = false;
+
+  function showUpdated() {
+    const foot = $('.lx-foot');
+    let span = $('#lx-upd');
+    if (!span) { span = document.createElement('span'); span.id = 'lx-upd'; foot.append(span); }
+    const hora = new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+    span.textContent = ' Se actualiza solo cada 5 minutos. Última actualización: ' + hora + '.';
+  }
+
   function onFullData(data) {
+    loading = false;
+    lastLoad = Date.now();
+    const first = !X;
+    const sig = JSON.stringify([data.barrido, data.cat, data.lavado, data.poda, data.cestas, data.areas]);
+    const changed = sig !== lastSig;
     X = data;
-    if (!$('#f-d0').options.length) {
-      const dias = [...new Set([...X.barrido, ...X.lavado, ...X.poda, ...X.cestas].map((r) => r.f))].sort();
-      const fillSel = (sel, arr, allLabel) => sel.append(new Option(allLabel, ''), ...arr.map(([v, n]) => new Option(n, v)));
-      fillSel($('#f-d0'), dias.map((d) => [d, dlab(d)]), 'Primer día');
-      fillSel($('#f-d1'), dias.map((d) => [d, dlab(d)]), 'Último día');
-      fillSel($('#lx-ruta'), X.cat.map((c) => [c.id, c.id]), 'Todas');
-      const usadas = (rows) => [...new Set(rows.map((r) => r.area))].map((id) => [id, (X.areas.find((a) => a.id === id) || { nombre: id }).nombre]);
-      fillSel($('#lv-area'), usadas(X.lavado), 'Todas las áreas');
-      fillSel($('#pd-area'), usadas(X.poda), 'Todas las áreas');
-      fillSel($('#pd-tipo'), [...new Set(X.poda.map((r) => r.tipo))].filter(Boolean).map((t) => [t, t]), 'Todos');
-      const on = (id, k) => $(id).addEventListener('change', (e) => { st[k] = e.target.value; if (st.d0 && st.d1 && st.d0 > st.d1) { if (k === 'd0') st.d1 = st.d0; else st.d0 = st.d1; } draw(); });
-      on('#f-d0', 'd0'); on('#f-d1', 'd1'); on('#lx-ruta', 'ruta'); on('#lx-fot', 'fot'); on('#lv-area', 'larea'); on('#pd-area', 'parea'); on('#pd-tipo', 'ptipo');
-      $('#lx-reset').addEventListener('click', () => { Object.assign(st, { d0: '', d1: '', ruta: '', fot: '', larea: '', parea: '', ptipo: '' }); draw(); });
-    }
+    showUpdated();
+    if (!first && !changed) return;   // nada nuevo: no se redibuja ni parpadea
+    lastSig = sig;
+    fillFilters();
+    if (first) wireFilters();
     draw();
   }
 
   function onFullDataError(err) {
-    $('#lx-take').textContent = 'Error al cargar datos: ' + (err && err.message ? err.message : err);
+    loading = false;
+    // Si ya hay datos en pantalla se conservan; el error solo se muestra en la primera carga.
+    if (!X) $('#lx-take').textContent = 'Error al cargar datos: ' + (err && err.message ? err.message : err);
+    else console.warn('No se pudo actualizar:', err);
   }
 
   function loadFullData() {
+    if (loading) return;
+    loading = true;
     google.script.run.withSuccessHandler(onFullData).withFailureHandler(onFullDataError).getFullDashboardData();
   }
+
+  setInterval(() => { if (document.visibilityState === 'visible') loadFullData(); }, REFRESH_MS);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && X && Date.now() - lastLoad > REFRESH_MS) loadFullData();
+  });
 
   // ---------------------------------------------------------------------
   // Filtros de servidor (sin exponer operario en la vista pública) para
