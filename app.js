@@ -542,6 +542,7 @@
     const changed = sig !== lastSig;
     X = data;
     showUpdated();
+    actualizarInformeMes();
     if (!first && !changed) return;   // nada nuevo: no se redibuja ni parpadea
     lastSig = sig;
     fillFilters();
@@ -634,16 +635,32 @@
     });
   }
 
+  // Meses para los informes (el actual y los 11 anteriores). Al llegar los datos se marcan los
+  // meses sin registros y se elige por defecto el mes mas reciente que si tiene datos.
+  let informeAuto = true;
   function initInformeMes() {
     const sel = $('#f-informe-mes');
     const now = new Date();
-    const opts = [];
-    for (let i = 1; i <= 12; i++) {
+    for (let i = 0; i < 12; i++) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      opts.push([`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`, `${MES_LARGO[d.getMonth()]} ${d.getFullYear()}`]);
+      sel.append(new Option(`${MES_LARGO[d.getMonth()]} ${d.getFullYear()}`, `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`));
     }
-    sel.append(...opts.map(([v, n]) => new Option(n, v)));
-    sel.value = opts[0][0];
+    sel.addEventListener('change', () => { informeAuto = false; });
+    if (X) actualizarInformeMes();
+  }
+
+  function actualizarInformeMes() {
+    const sel = $('#f-informe-mes');
+    if (!X || !sel.options.length) return;
+    const conDatos = new Set([...X.barrido, ...X.lavado, ...X.poda, ...X.cestas].map((r) => r.f.slice(0, 7)));
+    [...sel.options].forEach((o) => {
+      if (!o.dataset.base) o.dataset.base = o.textContent;
+      o.textContent = conDatos.has(o.value) ? o.dataset.base : o.dataset.base + ' (sin datos)';
+    });
+    if (informeAuto) {
+      const ultimo = [...sel.options].map((o) => o.value).find((v) => conDatos.has(v));
+      if (ultimo) sel.value = ultimo;
+    }
   }
 
   function informeMesSeleccionado() {
