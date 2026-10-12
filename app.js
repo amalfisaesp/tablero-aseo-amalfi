@@ -653,9 +653,11 @@
     const sel = $('#f-informe-mes');
     if (!X || !sel.options.length) return;
     const conDatos = new Set([...X.barrido, ...X.lavado, ...X.poda, ...X.cestas].map((r) => r.f.slice(0, 7)));
+    const hoy = new Date();
+    const actual = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`;
     [...sel.options].forEach((o) => {
       if (!o.dataset.base) o.dataset.base = o.textContent;
-      o.textContent = conDatos.has(o.value) ? o.dataset.base : o.dataset.base + ' (sin datos)';
+      o.textContent = o.dataset.base + (o.value === actual ? ' · en curso, preliminar' : '') + (conDatos.has(o.value) ? '' : ' (sin datos)');
     });
     if (informeAuto) {
       const ultimo = [...sel.options].map((o) => o.value).find((v) => conDatos.has(v));
