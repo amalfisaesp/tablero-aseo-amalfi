@@ -531,7 +531,7 @@
     let span = $('#lx-upd');
     if (!span) { span = document.createElement('span'); span.id = 'lx-upd'; foot.append(span); }
     const hora = new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
-    span.textContent = ' Se actualiza solo cada 5 minutos. Última actualización: ' + hora + '.';
+    span.textContent = ' Se actualiza solo cada 5 minutos. Última actualización: ' + hora;
   }
 
   function onFullData(data) {
